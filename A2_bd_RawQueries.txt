@@ -1,0 +1,59 @@
+//1.-----------------------------------------------------------------------------------
+db.COUNTRY.find({"WCHistory.0": {$exists: true}}, {"Cname": 1, "_id": 0});
+
+
+//2.-----------------------------------------------------------------------------------
+db.COUNTRY.aggregate([
+    { $unwind: "$WCHistory" },
+    { $group: { _id: "$Cname", num_of_world_cups: { $sum: 1 } } },
+    { $sort: { num_of_world_cups: -1 } }
+]);
+
+
+//3.-----------------------------------------------------------------------------------
+db.COUNTRY.find({ "Population": { $gt: 100 } }, { "Capital": 1, "Population": 1, "_id": 0 }).sort({ "Population": 1 })
+
+
+//4.-----------------------------------------------------------------------------------
+db.STADIUM.aggregate([
+    { $unwind: "$matches" },
+    { $match: { $or: [{ "matches.Match.Team1Score": { $gt: 4 } }, { "matches.Match.Team2Score": { $gt: 4 } }] } },
+    { $group: { _id: "$Stadium" } }
+]);
+
+
+//5.-----------------------------------------------------------------------------------
+db.STADIUM.find({ "Stadium": { $regex: "^Estadio" } }, { "city": 1, "_id": 0 });
+
+
+//6.-----------------------------------------------------------------------------------
+db.STADIUM.aggregate([
+    { $unwind: "$matches" },
+    { $group: { _id: "$Stadium", number_of_matches: { $sum: 1 } } },
+    { $sort: { number_of_matches: -1 } }
+]);
+
+
+//7.-----------------------------------------------------------------------------------
+db.COUNTRY.aggregate([
+    { $unwind: "$players" },
+    { $match: { "players.Height": { $gt: 198 } } },
+    { $project: { "Fname": "$players.Fname", "Lname": "$players.Lname", "DOB": "$players.DOB", "_id": 0 } }
+]);
+
+
+//8.-----------------------------------------------------------------------------------
+db.COUNTRY.aggregate([
+    { $unwind: "$players" },
+    { $match: {
+        "players.is_Captain": true,
+        $or: [
+            { "players.no_Yellow_cards": { $gt: 2 } },
+            { "players.no_Red_cards": { $gt: 0 } }
+        ],
+        "players.no_Goals": { $gt: 0 }     }},
+    { $project: { "Fname": "$players.Fname", "Lname": "$players.Lname", 
+        "Position": "$players.Position", 
+        "no_Goals": "$players.no_Goals", 
+        "_id": 0  }}]);
+
